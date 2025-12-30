@@ -1,0 +1,45 @@
+<div class="card" id="card-{{ prod.id }}" data-id="{{ prod.id }}" 
+     data-title="{{ prod.title }}" data-price="{{ prod.price }}" data-vendor="{{ prod.vendor }}" 
+     data-img="{{ prod.image_url }}">
+    
+    <div class="card-img">
+        <img src="{{ prod.image_url }}" 
+             alt="{{ prod.title }}" 
+             style="width: 100%; height: 200px; object-fit: cover; border-top-left-radius: 8px; border-top-right-radius: 8px;"
+             onerror="this.onerror=null;this.src='https://via.placeholder.com/150';">
+    </div>
+    
+    <div class="card-body">
+        <h4 style="font-size: 1rem; margin: 10px 0;">{{ prod.title }}</h4>
+        {% if prod.confidence %}
+        <div style="margin-bottom: 8px; font-size: 0.8rem; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+            <strong>{{ prod.confidence }}% Match</strong>
+            <div style="font-size: 0.7rem; color: #555;">via {{ prod.model_used }}</div>
+        </div>
+        {% endif %}
+        <p class="price">₹{{ prod.price }} <span class="vendor">via {{ prod.vendor }}</span></p>
+        
+        <div class="actions-row">
+            <div class="action-group">
+                <button onclick="likeProduct('{{ prod.id }}')" class="btn-icon btn-like" title="Like">👍</button>
+                <button onclick="dislikeProduct('{{ prod.id }}')" class="btn-icon btn-dislike" title="Dislike">👎</button>
+            </div>
+            
+            <div class="action-group">
+                <button onclick="toggleCompare('{{ prod.id }}', this)" class="btn-secondary btn-sm compare-btn" title="Compare">
+                    Comp <span class="sign">+</span>
+                </button>
+
+                {% if prod.id in cart_ids %}
+                <button onclick="toggleCart('{{ prod.id }}', this)" class="btn-primary btn-sm cart-btn remove-mode" title="Remove from Cart">
+                    Cart <span class="sign">-</span>
+                </button>
+                {% else %}
+                <button onclick="toggleCart('{{ prod.id }}', this)" class="btn-primary btn-sm cart-btn" title="Add to Cart">
+                    Cart <span class="sign">+</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

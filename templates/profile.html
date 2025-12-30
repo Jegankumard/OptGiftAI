@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="avatar-circle">{{ user.name[0] | upper }}</div>
+            <h2>{{ user.name }}</h2>
+            <!--<p class="text-muted">Member since {{ user.age }} years old</p>-->
+        </div>
+
+        <div class="info-section">
+            <h3>Account Details</h3>
+            <div class="info-row">
+                <span class="label">Name:</span>
+                <span class="value">{{ user.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Phone:</span>
+                <span class="value">{{ user.age }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Phone:</span>
+                <span class="value">{{ user.phone }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Password:</span>
+                <span class="value">••••••••</span> 
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>My Preferences</h3>
+            {% if prefs.interests %}
+                <div class="tags-container">
+                    {% for interest in prefs.interests %}
+                        <span class="tag">{{ interest | capitalize }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No interests selected.</p>
+            {% endif %}
+
+            <div class="info-row mt-2">
+                <span class="label">Priority:</span>
+                <span class="value">{{ prefs.priority | capitalize }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Default Occasion:</span>
+                <span class="value">{{ prefs.occasion | capitalize }}</span>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            
+            
+            <div class="action-row">
+                <a href="{{ url_for('update_preferences') }}" class="btn-secondary">Edit Preferences</a>
+                <a href="{{ url_for('logout') }}" class="btn-danger">Logout</a>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn-dashboard">← Back to Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .profile-container { display: flex; justify-content: center; padding: 2rem 0; }
+    .profile-card { background: white; width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+    .profile-header { background: #006fcf; color: white; padding: 2rem; text-align: center; }
+    .avatar-circle { width: 60px; height: 60px; background: white; color: #006fcf; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem; }
+    
+    .info-section { padding: 1.5rem; border-bottom: 1px solid #eee; }
+    .info-section h3 { font-size: 1.1rem; color: #444; margin-bottom: 1rem; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; }
+    .label { font-weight: 500; color: #666; }
+    .value { font-weight: bold; color: #333; }
+    
+    .tags-container { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tag { background: #e3f2fd; color: #006fcf; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; }
+    .mt-2 { margin-top: 1rem; }
+
+    /* New Button Styles */
+    .profile-actions { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    
+    /* Main Dashboard Button Style */
+    .btn-dashboard { 
+        background-color: #006fcf; 
+        color: white; 
+        text-align: center; 
+        padding: 12px; 
+        border-radius: 6px; 
+        text-decoration: none; 
+        font-weight: bold; 
+        display: block;
+    }
+    .btn-dashboard:hover { background-color: #0056a3; }
+
+    /* Row for Edit/Logout */
+    .action-row { display: flex; gap: 10px; }
+    
+    .btn-secondary { background: #f0f0f0; color: #333; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: block; text-align: center; flex: 1; border: 1px solid #ddd;}
+    .btn-danger { background: #ffebee; color: #d32f2f; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: block; text-align: center; flex: 1; border: 1px solid #ffcdd2;}
+</style>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Welcome to OptGiftAI</h2>
+            <p>Premium Recommendations & Gifting</p>
+        </div>
+
+        <div class="auth-toggle">
+            <button id="loginBtn" class="active" onclick="showForm('login')">Login</button>
+            <button id="signupBtn" onclick="showForm('signup')">Sign Up</button>
+        </div>
+
+        <form id="loginForm" method="POST" action="{{ url_for('login') }}" class="auth-form">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="9876543210" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="••••••" required>
+            </div>
+            <button type="submit" class="btn-primary full-width">Login</button>
+        </form>
+
+        <form id="signupForm" method="POST" action="{{ url_for('signup') }}" class="auth-form" style="display: none;">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" placeholder="Arun" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="9876543210" required>
+            </div>
+            <div class="form-group">
+                <label>Age</label>
+                <input type="number" name="age" placeholder="20" required>
+            </div>
+            <div class="form-group">
+                <label>Set Password</label>
+                <input type="password" name="password" placeholder="••••••" required>
+            </div>
+            <button type="submit" class="btn-primary full-width">Create Account</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showForm(type) {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const signupBtn = document.getElementById('signupBtn');
+
+        if (type === 'login') {
+            loginForm.style.display = 'block';
+            signupForm.style.display = 'none';
+            loginBtn.classList.add('active');
+            signupBtn.classList.remove('active');
+        } else {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+            loginBtn.classList.remove('active');
+            signupBtn.classList.add('active');
+        }
+    }
+</script>
+
+<style>
+    /* Inline styles for auth specific layout */
+    .auth-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+    }
+    .auth-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+    .auth-header h2 { color: #006fcf; margin-bottom: 0.5rem; }
+    .auth-header p { color: #666; font-size: 0.9rem; margin-bottom: 2rem; }
+    
+    .auth-toggle {
+        display: flex;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #eee;
+    }
+    .auth-toggle button {
+        flex: 1;
+        padding: 10px;
+        background: none;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        color: #888;
+        border-bottom: 3px solid transparent;
+    }
+    .auth-toggle button.active {
+        color: #006fcf;
+        border-bottom: 3px solid #006fcf;
+    }
+    
+    .form-group { text-align: left; margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: #333; margin-bottom: 5px; font-weight: 500; }
+    .form-group input { 
+        width: 100%; 
+        padding: 10px; 
+        border: 1px solid #ddd; 
+        border-radius: 6px; 
+        box-sizing: border-box; /* Fixes padding width issue */
+    }
+    .full-width { width: 100%; margin-top: 1rem; }
+</style>
+{% endblock %}

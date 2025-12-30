@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="search-panel">
+    <form method="POST" class="filter-form">
+        <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>Find the Perfect Gift</h3>
+            
+            <div style="text-align: right;">
+                <label style="font-size: 0.8rem; color: #666; margin-right: 5px;">AI Model:</label>
+                <select name="model_type" class="mode-select" style="border-color: #4caf50; color: #4caf50;">
+                    <option value="cosine" {% if model_type == 'cosine' %}selected{% endif %}>Cosine Similarity (Content)</option>
+                    <option value="logistic" {% if model_type == 'logistic' %}selected{% endif %}>Logistic Regression (Hybrid)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+             <select id="searchModeSelect" onchange="toggleSearchMode()" class="mode-select">
+                <option value="normal" {% if current_mode == 'normal' %}selected{% endif %}>Quick Search</option>
+                <option value="advanced" {% if current_mode == 'advanced' %}selected{% endif %}>Advanced Smart Search</option>
+            </select>
+        </div>
+
+        <input type="hidden" name="search_mode" id="searchModeInput" value="{{ current_mode }}">
+
+        <div id="normalSearch" style="display: {{ 'block' if current_mode == 'normal' else 'none' }};">
+            <input type="text" name="normal_query" value="{{ normal_query }}" 
+                   placeholder="Type query..." class="search-input full-width">
+        </div>
+
+        <div id="advancedSearch" style="display: {{ 'none' if current_mode == 'normal' else 'block' }};">
+            <div class="form-row">
+                <input type="text" name="occasion" value="{{ occasion }}" placeholder="Occasion (e.g. Birthday)" class="search-input">
+                <input type="text" name="relationship" value="{{ relationship }}" placeholder="Relationship" class="search-input">
+            </div>
+            <div class="form-row">
+                <input type="text" name="likes" value="{{ likes }}" placeholder="Likes..." class="search-input">
+                <input type="text" name="comments" value="{{ comments }}" placeholder="Comments..." class="search-input">
+            </div>
+        </div>
+
+        <div class="form-row mt-3">
+            <button type="submit" class="btn-primary">Get Recommendations</button>
+            </div>
+    </form>
+</div>
+
+<script>
+    function toggleSearchMode() {
+        // Get dropdown value
+        const mode = document.getElementById('searchModeSelect').value;
+        // Update hidden input for backend
+        document.getElementById('searchModeInput').value = mode;
+
+        // Toggle UI sections
+        if (mode === 'normal') {
+            document.getElementById('normalSearch').style.display = 'block';
+            document.getElementById('advancedSearch').style.display = 'none';
+        } else {
+            document.getElementById('normalSearch').style.display = 'none';
+            document.getElementById('advancedSearch').style.display = 'block';
+        }
+    }
+</script>
+
+
+<div class="results-section">
+    
+    <div style="display:flex; align-items:center; gap:10px; margin-top: 30px;">
+        <h2 style="margin:0;">Content-Based Suggestions</h2>
+        <span style="background:#e3f2fd; color:#006fcf; padding:4px 8px; border-radius:10px; font-size:0.8rem;">Matches Description</span>
+    </div>
+    <div class="scroll-row">
+        {% for prod in content_recs %}
+            {% include 'product_card.html' %}
+        {% endfor %}
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-top: 30px;">
+        <h2 style="margin:0;">Collaborative-Based Suggestions</h2>
+        <span style="background:#f3e5f5; color:#7b1fa2; padding:4px 8px; border-radius:10px; font-size:0.8rem;">Popular & Trending</span>
+    </div>
+    <div class="scroll-row">
+        {% for prod in collab_recs %}
+            {% include 'product_card.html' %}
+        {% endfor %}
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; margin-top: 30px;">
+        <h2 style="margin:0;">Hybrid Suggestions</h2>
+        <span style="background:#e8f5e9; color:#2e7d32; padding:4px 8px; border-radius:10px; font-size:0.8rem;">AI Optimized (Best Match)</span>
+    </div>
+    <div class="scroll-row">
+        {% for prod in hybrid_recs %}
+            {% include 'product_card.html' %}
+        {% endfor %}
+    </div>
+    
+</div>
+
+<div id="compareModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="compare-grid"></div>
+    </div>
+</div>
+{% endblock %}

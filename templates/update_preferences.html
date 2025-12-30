@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wizard-container">
+    <div class="wizard-card">
+        <h2>Update Your Preferences</h2>
+        <form method="POST">
+            
+            <div class="wizard-section">
+                <h3>Interests</h3>
+                <div class="checkbox-group">
+                    <label class="check-box">
+                        <input type="checkbox" name="interests" value="tech" {% if 'tech' in prefs.interests %}checked{% endif %}>
+                        <span>Technology</span>
+                    </label>
+                    <label class="check-box">
+                        <input type="checkbox" name="interests" value="fashion" {% if 'fashion' in prefs.interests %}checked{% endif %}>
+                        <span>Fashion</span>
+                    </label>
+                    <label class="check-box">
+                        <input type="checkbox" name="interests" value="home" {% if 'home' in prefs.interests %}checked{% endif %}>
+                        <span>Home Decor</span>
+                    </label>
+                    <label class="check-box">
+                        <input type="checkbox" name="interests" value="food" {% if 'food' in prefs.interests %}checked{% endif %}>
+                        <span>Food</span>
+                    </label>
+                    <label class="check-box">
+                        <input type="checkbox" name="interests" value="travel" {% if 'travel' in prefs.interests %}checked{% endif %}>
+                        <span>Travel</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="wizard-section">
+                <h3>Priority</h3>
+                <div class="radio-group">
+                    <label class="radio-box">
+                        <input type="radio" name="priority" value="price" {% if prefs.priority == 'price' %}checked{% endif %}>
+                        <span>💰 Price</span>
+                    </label>
+                    <label class="radio-box">
+                        <input type="radio" name="priority" value="quality" {% if prefs.priority == 'quality' %}checked{% endif %}>
+                        <span>💎 Quality</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="wizard-section">
+                <h3>Default Occasion</h3>
+                <select name="occasion_default" class="wizard-select">
+                    <option value="general" {% if prefs.occasion == 'general' %}selected{% endif %}>General</option>
+                    <option value="birthday" {% if prefs.occasion == 'birthday' %}selected{% endif %}>Birthday</option>
+                    <option value="anniversary" {% if prefs.occasion == 'anniversary' %}selected{% endif %}>Anniversary</option>
+                    <option value="festival" {% if prefs.occasion == 'festival' %}selected{% endif %}>Festival</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn-primary full-width">Save Changes</button>
+                <a href="{{ url_for('profile') }}" class="btn-secondary full-width" style="text-align: center; border: 1px solid #ddd;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .wizard-container { display: flex; justify-content: center; padding: 2rem 0; }
+    .wizard-card { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 500px; }
+    .wizard-section { margin-bottom: 1.5rem; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+    .full-width { width: 100%; box-sizing: border-box; }
+</style>
+{% endblock %}

@@ -1,0 +1,301 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    margin: 0;
+}
+
+nav {
+    background-color: #006fcf; /* Amex Blue */
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo { font-weight: 700; font-size: 1.2rem; letter-spacing: 1px; }
+
+.container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+
+/* Cards */
+.scroll-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.card {
+    background: white;
+    min-width: 250px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+    border: 1px solid #e0e0e0;
+}
+
+.card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+
+.card-body { padding: 1rem; }
+.price { color: #006fcf; font-weight: bold; font-size: 1.1rem; }
+.vendor { font-size: 0.8rem; color: #777; font-weight: normal; }
+
+/* Buttons */
+.btn-primary {
+    background-color: #006fcf;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-panel {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.filter-form input {
+    padding: 0.8rem;
+    margin-right: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.user-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: transparent;
+    color: white;
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+    color: #006fcf;
+}
+
+.user-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+
+/* Add these styles for Advancedor normal search */
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.mode-select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #006fcf;
+    color: #006fcf;
+    font-weight: bold;
+    background: white;
+    cursor: pointer;
+}
+
+.form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1; /* Makes inputs stretch evenly */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 200px;
+}
+
+.filter-form .full-width {
+    width: 100% !important; /* Overrides the 200px limit */
+    box-sizing: border-box; /* Keeps padding inside the box */
+    margin-right: 0;
+    max-width: 100%;
+}
+
+#normalSearch {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.mt-3 { margin-top: 1rem; }
+
+/* Product Card Actions */
+.actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.action-group {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-icon {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-like:hover { background-color: #e8f5e9; border-color: #4caf50; }
+.btn-dislike:hover { background-color: #ffebee; border-color: #f44336; }
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Toggle State for Compare */
+.btn-secondary.active {
+    background-color: #333;
+    color: white;
+    border-color: #333;
+}
+
+/* --- Cart Nav Styles --- */
+.nav-cart {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    transition: background 0.2s;
+}
+
+.nav-cart:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.badge {
+    background-color: #ff4757;
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+/* --- Toast Notifications --- */
+.toast-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast {
+    background: white;
+    color: #333;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-left: 5px solid #006fcf;
+    display: flex; align-items: center; gap: 12px;
+    min-width: 250px;
+    animation: slideIn 0.3s ease-out forwards;
+}
+.toast.success { border-left-color: #4caf50; }
+.toast.error { border-left-color: #f44336; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(20px); } }
+
+/* --- Compare Floating Button --- */
+.compare-float {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background-color: #006fcf;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,111,207,0.4);
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 900;
+    transition: transform 0.2s;
+}
+.compare-float:hover { transform: scale(1.05); }
+
+/* --- Modal & Table --- */
+.modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+.modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; position: relative; }
+.close { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.compare-table th, .compare-table td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+.compare-table th { background-color: #f4f6f8; color: #006fcf; }
+
+/* --- Toggle Buttons --- */
+.cart-btn.remove-mode {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border: 1px solid #ffcdd2;
+}
+.cart-btn.remove-mode:hover { background-color: #ffcdd2; }
+.btn-secondary.active {
+    background-color: #333;
+    color: white;
+}
+
