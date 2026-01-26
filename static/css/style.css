@@ -209,6 +209,14 @@ nav {
 }
 
 /* --- Cart Nav Styles --- */
+.nav-icon {
+    width: 20px;       /* Adjust based on your image size */
+    height: 20px;      /* Keeps it square */
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 5px; /* Spacing between icon and text */
+}
+
 .nav-cart {
     color: white;
     text-decoration: none;

@@ -6,7 +6,6 @@
         <div class="profile-header">
             <div class="avatar-circle">{{ user.name[0] | upper }}</div>
             <h2>{{ user.name }}</h2>
-            <!--<p class="text-muted">Member since {{ user.age }} years old</p>-->
         </div>
 
         <div class="info-section">
@@ -16,7 +15,7 @@
                 <span class="value">{{ user.name }}</span>
             </div>
             <div class="info-row">
-                <span class="label">Phone:</span>
+                <span class="label">Age:</span>
                 <span class="value">{{ user.age }}</span>
             </div>
             <div class="info-row">
@@ -51,9 +50,48 @@
             </div>
         </div>
 
-        <div class="profile-actions">
+        <div class="info-section">
+            <h3>Order History</h3>
             
-            
+            {% if orders %}
+                <div class="orders-container">
+                    {% for order in orders %}
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <span class="order-id">#{{ order.order_id }}</span>
+                                <div class="order-date">{{ order.date }}</div>
+                            </div>
+                            <div class="order-total">
+                                Total: ₹{{ order.total }}
+                                <span class="status-badge">Paid</span>
+                            </div>
+                        </div>
+
+                        <div class="order-items">
+                            {% for item in order.ordered_products %}
+                            <div class="order-item-row">
+                                <img src="{{ item.image_url }}" alt="img" onerror="this.src='https://via.placeholder.com/50'">
+                                <div class="item-info">
+                                    <div class="item-title">{{ item.title }}</div>
+                                    <div class="item-vendor">Sold by {{ item.vendor }}</div>
+                                </div>
+                                <div class="item-price">₹{{ item.price }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-orders">
+                    <p>You haven't purchased anything yet.</p>
+                    <a href="{{ url_for('dashboard') }}" style="color: #006fcf;">Start Shopping</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="profile-actions">            
             <div class="action-row">
                 <a href="{{ url_for('update_preferences') }}" class="btn-secondary">Edit Preferences</a>
                 <a href="{{ url_for('logout') }}" class="btn-danger">Logout</a>
@@ -80,7 +118,7 @@
     .tag { background: #e3f2fd; color: #006fcf; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; }
     .mt-2 { margin-top: 1rem; }
 
-    /* New Button Styles */
+    /* Profile Styles */
     .profile-actions { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     
     /* Main Dashboard Button Style */
@@ -95,11 +133,72 @@
         display: block;
     }
     .btn-dashboard:hover { background-color: #0056a3; }
-
-    /* Row for Edit/Logout */
     .action-row { display: flex; gap: 10px; }
-    
     .btn-secondary { background: #f0f0f0; color: #333; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: block; text-align: center; flex: 1; border: 1px solid #ddd;}
     .btn-danger { background: #ffebee; color: #d32f2f; text-decoration: none; padding: 10px 20px; border-radius: 6px; display: block; text-align: center; flex: 1; border: 1px solid #ffcdd2;}
+    .orders-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .order-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+
+    .order-header {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+    }
+    .order-id { font-weight: bold; color: #333; font-family: monospace; font-size: 1.1rem; }
+    .order-date { font-size: 0.85rem; color: #666; margin-top: 2px; }
+    .order-total { font-weight: bold; font-size: 1rem; color: #333; text-align: right; }
+    .status-badge {
+        display: inline-block;
+        background: #e8f5e9;
+        color: #2e7d32;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+    .order-items { padding: 0.5rem 1rem; }
+    .order-item-row {
+        display: flex;
+        align-items: center;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        gap: 15px;
+    }
+    .order-item-row:last-child { border-bottom: none; }
+    .order-item-row img {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #eee;
+    }
+    .item-info { flex: 1; }
+    .item-title { font-size: 0.95rem; color: #333; font-weight: 500; }
+    .item-vendor { font-size: 0.8rem; color: #888; }
+    .item-price { font-weight: bold; color: #555; }
+    .empty-orders {
+        text-align: center;
+        padding: 2rem;
+        color: #777;
+        background: #f9f9f9;
+        border-radius: 8px;
+    }
+    .p-title { font-weight: 500; color: #333; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .p-price { color: #006fcf; font-size: 0.85rem; font-weight: bold; }
 </style>
 {% endblock %}

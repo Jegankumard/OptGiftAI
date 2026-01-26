@@ -144,7 +144,7 @@ function toggleCart(productId, btnElement) {
 }
 
 // ==========================================
-// --- COMPARE LOGIC ----
+// --- COMPARE LOGIC (Updated) ---
 // ==========================================
 
 function toggleCompare(productId, btnElement) {

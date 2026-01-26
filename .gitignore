@@ -1,2 +1,7 @@
-.venvopgiftai
-/instance/optgift.db
+# .gitignore
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+instance/
+*.db

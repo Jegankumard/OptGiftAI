@@ -9,6 +9,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Interaction, PRODUCTS
 from models import PRODUCTS
 import json
+from datetime import datetime
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key'
@@ -24,18 +26,18 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# DB setup
+# --- Database Setup ---
 with app.app_context():
     db.create_all()
 
-# Routes 
+# --- Routes ---
 @app.route('/')
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     return redirect(url_for('login'))
 
-# Login route
+# --- Login Routes ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -53,7 +55,7 @@ def login():
         flash('Invalid phone or password')
     return render_template('login.html')
 
-# Signup route
+# --- Signup Route ---
 @app.route('/signup', methods=['POST'])
 def signup():
     phone = request.form.get('phone')
@@ -76,7 +78,7 @@ def signup():
     login_user(new_user)
     return redirect(url_for('wizard'))
 
-# Wizard route
+# --- Wizard Route ---
 @app.route('/wizard', methods=['GET', 'POST'])
 @login_required
 def wizard():
@@ -91,11 +93,12 @@ def wizard():
         return redirect(url_for('dashboard'))
     return render_template('wizard.html')
 
-# Dashboard route
+# --- Dashboard Route ---
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    # 1. Defaults
+    
+    # Defaults
     current_mode = 'advanced'
     normal_query = ''
     occasion = ''
@@ -112,7 +115,6 @@ def dashboard():
     if request.method == 'POST':
         # 2. Capture Inputs
         current_mode = request.form.get('search_mode', 'advanced')
-        
         use_personalization = request.form.get('use_personalization')
         personal_tags = ""
         if use_personalization == 'yes' and current_user.preferences:
@@ -142,24 +144,27 @@ def dashboard():
             if parts:
                 context_query = " ".join(parts)
         
-        # --- 4. GENERATE 3 DISTINCT LISTS ---
+        # --- 4. GENERATE 3 DISTINCT LISTS (UPDATED to top_k=20) ---
         
         # A. Content-Based (Text Matching)
-        content_recs = engine.get_content_based(context_query)
+        content_recs = engine.get_content_based(context_query, top_k=20)
         
         # B. Collaborative (Based on what users clicked/liked in DB)
-        # Fetch all interactions from DB to find "Popular" items
         all_interactions = Interaction.query.all()
-        collab_recs = engine.get_collaborative_based(all_interactions)
+        collab_recs = engine.get_collaborative_based(all_interactions, top_k=20)
         
         # C. Hybrid (Combination)
-        hybrid_recs = engine.get_hybrid_based(context_query)
+        hybrid_recs = engine.get_hybrid_based(context_query, top_k=20)
 
-    # Fallback if page just loaded (GET request)
+    # Fallback if page just loaded (GET request) - Show 20 items
     if not content_recs:
-        content_recs = PRODUCTS[:4]
-        collab_recs = PRODUCTS[4:8]
-        hybrid_recs = PRODUCTS[8:12]
+        # Simple slicing or random selection if available
+        import random
+        # Helper to get safe slice
+        safe_len = min(len(PRODUCTS), 20)
+        content_recs = PRODUCTS[:safe_len]
+        collab_recs = PRODUCTS[safe_len:safe_len*2] if len(PRODUCTS) > safe_len else PRODUCTS[:safe_len]
+        hybrid_recs = PRODUCTS[:safe_len]
 
     try:
         cart_ids = json.loads(current_user.cart) if current_user.cart else []
@@ -177,10 +182,8 @@ def dashboard():
                          likes=likes,
                          comments=comments,
                          cart_ids=cart_ids)
-
-
     
-# Context processor route
+# --- Context Processor Route ---
 @app.context_processor
 def inject_cart_count():
     if current_user.is_authenticated and current_user.cart:
@@ -191,8 +194,7 @@ def inject_cart_count():
             return dict(cart_count=0)
     return dict(cart_count=0)
 
-
-# Add to cart route
+# --- Cart Route ---
 @app.route('/add_to_cart', methods=['POST'])
 @login_required
 def add_to_cart():
@@ -213,7 +215,7 @@ def add_to_cart():
     
     return jsonify({"status": "exists", "cart_count": len(cart_list), "message": "Item is already in your cart"})
 
-# Remove from cart route
+# --- Remove from cart Route ---
 @app.route('/remove_from_cart', methods=['POST'])
 @login_required
 def remove_from_cart():
@@ -232,7 +234,7 @@ def remove_from_cart():
     
     return jsonify({"status": "success", "cart_count": len(cart_list)})
 
-# Cart route
+# --- Cart Route ---
 @app.route('/cart')
 @login_required
 def view_cart():
@@ -248,8 +250,7 @@ def view_cart():
     
     return render_template('cart.html', cart_items=cart_items, total=total_price)
 
-
-# Get replacement card route
+# --- Replacement product card Route ---
 @app.route('/get_replacement_card', methods=['POST'])
 @login_required
 def get_replacement_card():
@@ -270,7 +271,7 @@ def get_replacement_card():
     
     return jsonify({"status": "no_more", "message": "No more items"})
 
-# Feedback route
+# --- Feedback Route ---
 @app.route('/feedback', methods=['POST'])
 @login_required
 def feedback():
@@ -284,31 +285,76 @@ def feedback():
     if prod:
         new_weights = engine.update_rl_weights(current_user.rl_weights, action, prod['price'])
         current_user.rl_weights = new_weights
-        
         interaction = Interaction(user_id=current_user.id, product_id=str(product_id), action_type=action)
         db.session.add(interaction)
         db.session.commit()
-        
         return jsonify({"status": "success", "new_weights": new_weights})
     
     return jsonify({"status": "error", "message": "Product not found"})
 
-# Profile route
+# --- Checkout Route ---
+@app.route('/checkout', methods=['POST'])
+@login_required
+def checkout():
+    try:
+        # Load Cart
+        cart_ids = json.loads(current_user.cart) if current_user.cart else []
+        
+        if not cart_ids:
+            return jsonify({"status": "error", "message": "Cart is empty!"})
+
+        # We store the full item details 
+        cart_items = [p for p in PRODUCTS if p['id'] in cart_ids]
+        
+        # Calculate Total
+        total_amount = sum(item['price'] for item in cart_items)
+        
+        # Create Order Object
+        new_order = {
+            "order_id": f"ORD-{int(time.time())}", # Unique ID like ORD-17150022
+            "date": datetime.now().strftime("%d %b %Y, %I:%M %p"), 
+            "total": total_amount,
+            "ordered_products": cart_items 
+        }
+
+        # Load Existing Orders
+        try:
+            order_history = json.loads(current_user.orders) if current_user.orders else []
+        except:
+            order_history = []
+        
+        # Add new order to the TOP of the list 
+        order_history.insert(0, new_order)
+        
+        # Save Updates
+        current_user.orders = json.dumps(order_history)
+        current_user.cart = json.dumps([]) # Empty the cart
+        db.session.commit()
+        
+        return jsonify({"status": "success", "message": "Order placed successfully!"})
+        
+    except Exception as e:
+        print(f"Checkout Error: {e}")
+        return jsonify({"status": "error", "message": "Checkout failed."})
+
+# --- Profile Route ---
 @app.route('/profile')
 @login_required
 def profile():
-    # Convert stored JSON string back to Python Dictionary to display
     user_prefs = json.loads(current_user.preferences) if current_user.preferences else {}
-    return render_template('profile.html', user=current_user, prefs=user_prefs)
+    # Load Orders
+    try:
+        orders = json.loads(current_user.orders) if current_user.orders else []
+    except:
+        orders = []
+    return render_template('profile.html', user=current_user, prefs=user_prefs, orders=orders)
 
-
-# Update preferences route
+# --- Update Preferences Route ---
 @app.route('/update_preferences', methods=['GET', 'POST'])
 @login_required
 def update_preferences():
-    # Load current prefs to pre-fill the form
+    # Load current prefs
     current_prefs = json.loads(current_user.preferences) if current_user.preferences else {}
-    
     if request.method == 'POST':
         new_prefs = {
             "interests": request.form.getlist('interests'),
@@ -319,10 +365,9 @@ def update_preferences():
         db.session.commit()
         flash('Preferences updated successfully!')
         return redirect(url_for('profile'))
-        
     return render_template('update_preferences.html', prefs=current_prefs)
 
-# Logout route
+# --- Logout Route ---
 @app.route('/logout')
 @login_required
 def logout():
@@ -330,6 +375,6 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
-# main function
+# --- main app route ---
 if __name__ == '__main__':
     app.run(debug=True)

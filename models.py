@@ -1,4 +1,3 @@
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
@@ -17,6 +16,7 @@ class User(UserMixin, db.Model):
     age = db.Column(db.Integer)
     preferences = db.Column(db.Text, default='{}') 
     cart = db.Column(db.Text, default='[]')
+    orders = db.Column(db.Text, default='[]')
     rl_weights = db.Column(db.Text, default=json.dumps({
         'price_weight': 0.3, 
         'relevance_weight': 0.7,

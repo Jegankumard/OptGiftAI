@@ -9,18 +9,18 @@
         <div class="cart-items">
             {% for item in cart_items %}
             <div class="cart-item" id="cart-row-{{ item.id }}">
-                <img src="https://via.placeholder.com/80" alt="{{ item.title }}">
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" onerror="this.src='https://via.placeholder.com/80'">
                 <div class="item-details">
                     <h4>{{ item.title }}</h4>
                     <p class="text-muted">Vendor: {{ item.vendor }}</p>
                 </div>
                 <div class="qty-stepper active" style="margin-right: 15px;">
                     <button onclick="updateCartPage({{ item.id }}, 'remove')" class="step-btn">-</button>
-                    <span class="qty-display">{{ item.qty }}</span>
+                    <span class="qty-display">1</span>
                     <button onclick="updateCartPage({{ item.id }}, 'add')" class="step-btn">+</button>
                 </div>
                 <div class="item-price">₹{{ item.price }}</div>
-                <button class="btn-remove" onclick="removeFromCart({{ item.id }}, {{ item.price }})">Remove</button>
+                <button class="btn-remove" onclick="openRemoveModal({{ item.id }})">Remove</button>
             </div>
             {% endfor %}
         </div>
@@ -40,7 +40,7 @@
                 <span>Total</span>
                 <span id="final-total">₹{{ (total * 1.05) | round | int }}</span>
             </div>
-            <button class="btn-primary full-width" onclick="alert('Checkout integration coming soon!')">Proceed to Checkout</button>
+            <button class="btn-primary full-width" onclick="showCheckoutModal()">Proceed to Checkout</button>
         </div>
     </div>
     {% else %}
@@ -51,14 +51,47 @@
     {% endif %}
 </div>
 
+<div id="checkoutModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div class="blue-header">
+            <h3>OptGiftAI Cart</h3>
+            <span class="close-x" onclick="closeCheckoutModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Confirm purchase of all items?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" onclick="executeCheckout()" id="confirmBtn">OK</button>
+            <button class="btn-secondary" onclick="closeCheckoutModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div id="removeModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <div class="blue-header">
+            <h3>OptGiftAI Cart</h3>
+            <span class="close-x" onclick="closeRemoveModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p>Remove this item?</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" onclick="executeRemove()" id="confirmRemoveBtn">OK</button>
+            <button class="btn-secondary" onclick="closeRemoveModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <style>
+    /* --- Page Layout Styles --- */
     .cart-container { max-width: 1000px; margin: 2rem auto; }
     .cart-layout { display: flex; gap: 2rem; }
     .cart-items { flex: 2; }
     .cart-summary { flex: 1; background: white; padding: 1.5rem; border-radius: 8px; height: fit-content; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
     .cart-item { display: flex; align-items: center; background: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid #eee; gap: 15px;}
-    .cart-item img { border-radius: 4px; }
+    .cart-item img { border-radius: 4px; width: 80px; height: 80px; object-fit: cover; }
     .item-details { flex: 1; }
     .item-price { font-weight: bold; color: #006fcf; font-size: 1.1rem; }
     
@@ -68,34 +101,169 @@
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
     .summary-row.total { font-weight: bold; font-size: 1.2rem; color: #333; }
     .full-width { width: 100%; margin-top: 1rem; }
-    
     .empty-state { text-align: center; padding: 3rem; background: white; border-radius: 8px; }
 
     @media(max-width: 768px) { .cart-layout { flex-direction: column; } }
+
+    /* --- Custom modal Styles --- */
+    .custom-modal {
+        display: none; 
+        position: fixed; 
+        z-index: 2000; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        background-color: rgba(0,0,0,0.5); 
+        animation: fadeIn 0.3s;
+    }
+
+    .custom-modal-content {
+        background-color: white;
+        margin: 10% auto;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        overflow: hidden;
+        animation: slideDown 0.3s;
+    }
+
+    .blue-header {
+        background-color: #006fcf; 
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .blue-header h3 { margin: 0; font-size: 1rem; font-weight: 500; }
+    
+    .close-x { cursor: pointer; font-size: 1.5rem; line-height: 1; }
+    .close-x:hover { color: #ddd; }
+
+    .modal-body { padding: 25px 20px; font-size: 1.1rem; color: #333; text-align: center; }
+
+    .modal-footer {
+        padding: 15px 20px;
+        background-color: #f9f9f9;
+        display: flex;
+        justify-content: flex-end; 
+        gap: 10px;
+        border-top: 1px solid #eee;
+    }
+    
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+    @keyframes slideDown { from {transform: translateY(-20px);} to {transform: translateY(0);} }
 </style>
 
 <script>
-function updateCartPage(id, action) {
-        updateCart(id, action); // Call the main JS function
-        setTimeout(() => location.reload(), 200); // Reload to update totals
-}
-function removeFromCart(id, price) {
-    if(!confirm("Remove this item?")) return;
+    // --- Global Variable to track which item to remove ---
+    let itemToRemoveId = null;
 
-    fetch('/remove_from_cart', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ product_id: id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        // Remove Row
-        document.getElementById(`cart-row-${id}`).remove();
-        // Update Nav Count
-        document.getElementById('nav-cart-count').innerText = data.cart_count;
-        // Reload to update total calculation easily
-        location.reload(); 
-    });
-}
+    // ==========================================
+    // CHECKOUT MODAL
+    // ==========================================
+    function showCheckoutModal() {
+        document.getElementById('checkoutModal').style.display = 'block';
+    }
+
+    function closeCheckoutModal() {
+        document.getElementById('checkoutModal').style.display = 'none';
+        const btn = document.getElementById('confirmBtn');
+        btn.innerText = "OK";
+        btn.disabled = false;
+    }
+
+    function executeCheckout() {
+        const btn = document.getElementById('confirmBtn');
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        fetch('/checkout', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                window.location.href = "{{ url_for('profile') }}";
+            } else {
+                alert(data.message);
+                closeCheckoutModal();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Something went wrong");
+            closeCheckoutModal();
+        });
+    }
+
+    // ==========================================
+    //  REMOVE ITEM MODAL
+    // ==========================================
+    function openRemoveModal(id) {
+        itemToRemoveId = id; // Store ID to verify later
+        document.getElementById('removeModal').style.display = 'block';
+    }
+
+    function closeRemoveModal() {
+        document.getElementById('removeModal').style.display = 'none';
+        itemToRemoveId = null; // Clear ID
+    }
+
+    function executeRemove() {
+        if(!itemToRemoveId) return;
+
+        fetch('/remove_from_cart', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ product_id: itemToRemoveId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Remove Row and Refresh
+            const row = document.getElementById(`cart-row-${itemToRemoveId}`);
+            if(row) row.remove();
+            
+            // Close modal immediately
+            closeRemoveModal();
+            
+            // Reload page to update totals correctly
+            location.reload(); 
+        });
+    }
+
+    // ==========================================
+    // GENERAL
+    // ==========================================
+    function updateCartPage(id, action) {
+        // Assuming updateCart is defined in main.js
+        if(typeof updateCart === 'function') {
+            updateCart(id, action); 
+        } else {
+             const endpoint = action === 'add' ? '/add_to_cart' : '/remove_from_cart';
+             fetch(endpoint, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ product_id: id })
+            });
+        }
+        setTimeout(() => location.reload(), 200);
+    }
+    
+    // Close modals if user clicks outside of them
+    window.onclick = function(event) {
+        const checkoutM = document.getElementById('checkoutModal');
+        const removeM = document.getElementById('removeModal');
+        
+        if (event.target == checkoutM) {
+            closeCheckoutModal();
+        }
+        if (event.target == removeM) {
+            closeRemoveModal();
+        }
+    }
 </script>
 {% endblock %}

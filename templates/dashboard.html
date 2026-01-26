@@ -5,14 +5,6 @@
     <form method="POST" class="filter-form">
         <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
             <h3>Find the Perfect Gift</h3>
-            
-            <div style="text-align: right;">
-                <label style="font-size: 0.8rem; color: #666; margin-right: 5px;">AI Model:</label>
-                <select name="model_type" class="mode-select" style="border-color: #4caf50; color: #4caf50;">
-                    <option value="cosine" {% if model_type == 'cosine' %}selected{% endif %}>Cosine Similarity (Content)</option>
-                    <option value="logistic" {% if model_type == 'logistic' %}selected{% endif %}>Logistic Regression (Hybrid)</option>
-                </select>
-            </div>
         </div>
 
         <div style="margin-bottom: 15px;">
@@ -50,7 +42,6 @@
     function toggleSearchMode() {
         // Get dropdown value
         const mode = document.getElementById('searchModeSelect').value;
-        // Update hidden input for backend
         document.getElementById('searchModeInput').value = mode;
 
         // Toggle UI sections
@@ -71,7 +62,7 @@
         <h2 style="margin:0;">Content-Based Suggestions</h2>
         <span style="background:#e3f2fd; color:#006fcf; padding:4px 8px; border-radius:10px; font-size:0.8rem;">Matches Description</span>
     </div>
-    <div class="scroll-row">
+    <div class="scroll-grid">
         {% for prod in content_recs %}
             {% include 'product_card.html' %}
         {% endfor %}
@@ -81,7 +72,7 @@
         <h2 style="margin:0;">Collaborative-Based Suggestions</h2>
         <span style="background:#f3e5f5; color:#7b1fa2; padding:4px 8px; border-radius:10px; font-size:0.8rem;">Popular & Trending</span>
     </div>
-    <div class="scroll-row">
+    <div class="scroll-grid">
         {% for prod in collab_recs %}
             {% include 'product_card.html' %}
         {% endfor %}
@@ -91,13 +82,40 @@
         <h2 style="margin:0;">Hybrid Suggestions</h2>
         <span style="background:#e8f5e9; color:#2e7d32; padding:4px 8px; border-radius:10px; font-size:0.8rem;">AI Optimized (Best Match)</span>
     </div>
-    <div class="scroll-row">
+    <div class="scroll-grid">
         {% for prod in hybrid_recs %}
             {% include 'product_card.html' %}
         {% endfor %}
     </div>
     
 </div>
+
+<div id="compareModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="compare-grid"></div>
+    </div>
+</div>
+
+<style>
+    .scroll-grid {
+        display: grid;
+        grid-template-rows: repeat(2, auto); 
+        grid-auto-flow: column;   
+        grid-auto-columns: 260px; 
+        gap: 15px;
+        overflow-x: auto;        
+        padding: 15px 5px;
+        scroll-snap-type: x mandatory; 
+        scrollbar-width: thin; 
+    }
+    .scroll-grid .card {
+        height: 100%;
+        min-width: unset; 
+        scroll-snap-align: start;
+    }
+</style> 
+
 
 <div id="compareModal" class="modal">
     <div class="modal-content">

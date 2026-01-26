@@ -8,11 +8,12 @@
 </head>
 <body>
     <nav>
-        <div class="logo">OptGiftAI</div>
+        <a href="{{ url_for('dashboard') }}" class="logo" style="text-decoration: none; color: white;">OptGiftAI</a>
         {% if current_user.is_authenticated %}
         <div style="display: flex; align-items: center; gap: 20px;">
             <a href="{{ url_for('view_cart') }}" class="nav-cart">
-                🛒 Cart <span id="nav-cart-count" class="badge">{{ cart_count }}</span>
+                <img src="{{ url_for('static', filename='images/cart.png') }}" alt="Cart" class="nav-icon"> 
+                Cart <span id="nav-cart-count" class="badge">{{ cart_count }}</span>
             </a>
 
             <div class="user-dropdown">
@@ -23,6 +24,7 @@
                     <a href="{{ url_for('logout') }}">Logout</a>
                 </div>
             </div>
+
         </div>
         {% endif %}
     </nav>
@@ -36,12 +38,12 @@
         
         {% block content %}{% endblock %}
     </div>
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     <div id="toast-container" class="toast-container"></div>
     <div id="compare-floating-btn" class="compare-float" style="display: none;" onclick="openCompareModal()">
-        Compare (<span id="compare-count">0</span>)
-    </div>
+        Compare (<span id="compare-count">0</span>) </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </body>
