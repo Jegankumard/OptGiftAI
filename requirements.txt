@@ -10,6 +10,7 @@ intel-openmp
 nltk
 joblib
 bcrypt
+gunicorn
 
 
 ####pip uninstall torch torchvision torchaudio -y
