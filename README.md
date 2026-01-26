@@ -1,3 +1,4 @@
+'''
 personalized_gifts/ 
 ├── app.py # Main Flask Application & Routes 
 ├── models.py # Database Models (SQLAlchemy) 
@@ -64,6 +65,7 @@ threadpoolctl         3.6.0
 tokenizers            0.13.3
 torch                 2.9.1+cpu
 torchaudio            2.9.1+cpu
+'''
 torchvision           0.24.1+cpu
 tqdm                  4.67.1
 transformers          4.30.2
