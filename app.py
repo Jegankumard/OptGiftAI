@@ -14,8 +14,7 @@ import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key'
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'optgift.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///optgift.db'
 
 db.init_app(app)
 engine = GiftRecommender(PRODUCTS)
