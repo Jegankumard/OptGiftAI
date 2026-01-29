@@ -1,4 +1,3 @@
-
 import nltk
 import pandas as pd
 import numpy as np
@@ -86,26 +85,76 @@ class GiftRecommender:
             needed = top_k - len(results)
             results.extend(self.get_random_recommendations(needed, "Collaborative (Filler)"))
         return results
+
+    def update_model_with_interactions(self, interactions):
+        """Retrains the LR model based on purchase data instead of price."""
+        if not interactions:
+            return
     
-    def get_hybrid_based(self, query, top_k=8):
-        """
-        Combines Cosine Similarity (Relevance) with Logistic Regression (Quality/Conversion Probability).
-        """
+        # 1. Identify which products were actually purchased
+        # Filter interactions for 'purchase' actions [cite: 22, 31]
+        purchase_ids = [int(i.product_id) for i in interactions if i.action_type == 'purchase']
+    
+        if not purchase_ids:
+            return
+
+        # 2. Create labels: 1 for purchased items, 0 for others
+        new_labels = [1 if p['id'] in purchase_ids else 0 for p in self.products]
+    
+        # 3. Retrain if we have at least one example of both classes
+        if len(set(new_labels)) > 1:
+            self.lr_model.fit(self.tfidf_matrix, new_labels)
+        
+            
+    def get_hybrid_based(self, query, occasion=None, relationship=None, top_k=20):
+        # 1. Hard Filter: Prioritize the occasion if provided [cite: 282-283]
+        filtered_df = self.df
+        if occasion and occasion.strip():
+            mask = self.df['combined_text'].str.contains(occasion, case=False, na=False)
+            filtered_df = self.df[mask]
+    
+        if filtered_df.empty:
+            filtered_df = self.df
+
+        # 2. Vectorize the search query [cite: 275]
         clean_query = self.preprocess_text(query)
         query_vec = self.vectorizer.transform([clean_query])
-        
-        cosine_sim = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-        probs = self.lr_model.predict_proba(self.tfidf_matrix)[:, 1]
-        hybrid_scores = (0.7 * cosine_sim) + (0.3 * probs)
-        top_indices = hybrid_scores.argsort()[-top_k:][::-1]
-        
+    
+        subset_indices = filtered_df.index
+        subset_tfidf = self.tfidf_matrix[subset_indices]
+
+        # 3. Calculate scores
+        cosine_sims = cosine_similarity(query_vec, subset_tfidf).flatten() 
+        lr_probs = self.lr_model.predict_proba(subset_tfidf)[:, 1]
+
         results = []
-        for idx in top_indices:
+        for i, idx in enumerate(subset_indices):
+            # Base AI Score (70% Relevance, 30% Preference) [cite: 284]
+            base_score = (0.7 * cosine_sims[i]) + (0.3 * lr_probs[i])
+        
+            # 4. INTENT BOOSTING: Specifically look for the relationship 
+            boost = 0
+            product_text = self.df.loc[idx, 'combined_text'].lower()
+        
+            # We search specifically for the relationship in the product text
+            if relationship and relationship.lower() in product_text:
+                boost += 0.25  
+            
+            if occasion and occasion.lower() in product_text:
+                boost += 0.40  
+            if occasion and "wedding" in occasion.lower() and "birthday" in product_text:
+                boost -= 0.30
+
+            final_score = max(0.0, min(base_score + boost, 1.0))
+        
             product = self.products[idx].copy()
-            product['confidence'] = round(float(hybrid_scores[idx]) * 100, 1)
-            product['model_used'] = "Hybrid (Content + LR)"
+            product['confidence'] = round(float(final_score) * 100, 1)
+            product['model_used'] = "Context-Prioritized Hybrid"
             results.append(product)
-        return results
+
+        # Sort results to put the highest confidence at the top
+        results = sorted(results, key=lambda x: x['confidence'], reverse=True)
+        return results[:top_k]
 
     def get_random_recommendations(self, k, model_name):
         import random

@@ -29,6 +29,56 @@ def load_user(user_id):
 # --- Database Setup ---
 with app.app_context():
     db.create_all()
+    if not User.query.first():
+        print("Empty database detected. Seeding 1,000 test users...")
+        from werkzeug.security import generate_password_hash
+        import random
+
+        # Shared password for all test accounts
+        password_hash = generate_password_hash("jegan")
+        
+        # Data pools for randomization [cite: 569-574, 578]
+        first_names = ["Amit", "Priya", "Rahul", "Anjali", "Vikram", "Neha", "Sanjay", "Deepa", "Arjun", "Kavita"]
+        last_names = ["Sharma", "Verma", "Gupta", "Malhotra", "Joshi", "Patel", "Reddy", "Nair"]
+        interest_options = ["tech", "fashion", "home", "food", "travel"]
+        occasions = ["general", "birthday", "anniversary", "festival"]
+
+        # age_range setup (15 to 50 inclusive = 36 possible ages)
+        min_age = 15
+        max_age = 50
+        age_count = max_age - min_age + 1
+
+        for i in range(1000):  # Creates exactly 1,000 users
+            # 1. Generate Phone Number: 9999999000 to 9999999999
+            phone = f"9999999{str(i).zfill(3)}"
+            
+            # 2. Distribute Ages Equally: Cycles through 15-50 repeatedly
+            current_age = min_age + (i % age_count)
+            
+            # 3. Randomize Profile Data
+            name = f"{random.choice(first_names)} {random.choice(last_names)}"
+            prefs = {
+                "interests": random.sample(interest_options, random.randint(1, 3)),
+                "priority": random.choice(["price", "quality"]),
+                "occasion": random.choice(occasions)
+            }
+
+            # 4. Create and stage user [cite: 31]
+            new_user = User(
+                name=name,
+                phone=phone,
+                password_hash=password_hash,
+                age=current_age,
+                preferences=json.dumps(prefs)
+            )
+            db.session.add(new_user)
+            
+            # Commit in batches of 100 for better performance with 1,000 records
+            if i % 100 == 0:
+                db.session.commit()
+        
+        db.session.commit()
+        print(f"Successfully auto-seeded 1,000 users (Ages 15-50).")
 
 # --- Routes ---
 @app.route('/')
@@ -97,25 +147,27 @@ def wizard():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    
-    # Defaults
+    # 1. Initialize variables for both GET and POST to avoid NameErrors 
     current_mode = 'advanced'
     normal_query = ''
     occasion = ''
-    relationship = ''
+    relationship = ''  # Critically defined here
     likes = ''
     comments = ''
-    context_query = "general gifts" 
+    context_query = "general personalized gifts" 
     
-    # Containers for the 3 types of recommendations
     content_recs = []
     collab_recs = []
     hybrid_recs = []
+
+    # Get all interactions once for the engines [cite: 11]
+    all_interactions = Interaction.query.all()
     
     if request.method == 'POST':
-        # 2. Capture Inputs
+        # 2. Capture Inputs from the form [cite: 7, 9]
         current_mode = request.form.get('search_mode', 'advanced')
         use_personalization = request.form.get('use_personalization')
+        
         personal_tags = ""
         if use_personalization == 'yes' and current_user.preferences:
             try:
@@ -124,48 +176,50 @@ def dashboard():
             except:
                 pass
 
-        # 3. Build Query
         if current_mode == 'normal':
             normal_query = request.form.get('normal_query', '')
-            if normal_query:
-                context_query = f"{normal_query} {personal_tags}".strip()
+            context_query = f"{normal_query} {normal_query} {normal_query} {personal_tags}".strip()
         else:
+            # Explicitly capture advanced fields [cite: 9]
             occasion = request.form.get('occasion', '')
             relationship = request.form.get('relationship', '')
             likes = request.form.get('likes', '')
             comments = request.form.get('comments', '')
             
+            # 3. Build Weighted Query String [cite: 10]
+            # Repeating 'occasion' to increase its TF-IDF importance
             parts = []
-            if occasion: parts.append(f"{occasion}")
-            if relationship: parts.append(f"for {relationship}")
+            if occasion: parts.append(f"{occasion} {occasion}")
+            if relationship: parts.append(f"{relationship}")
             if likes: parts.append(f"loves {likes}")
             if comments: parts.append(f"{comments}")
             if personal_tags: parts.append(f"interests: {personal_tags}")
-            if parts:
-                context_query = " ".join(parts)
+            
+            context_query = " ".join(parts) if parts else "personalized gift"
+
+        # 4. Update Recommendation Engine with latest DB data [cite: 11, 280]
+        engine.update_model_with_interactions(all_interactions)
         
-        # --- 4. GENERATE 3 DISTINCT LISTS (UPDATED to top_k=20) ---
-        
-        # A. Content-Based (Text Matching)
+        # 5. Generate Recommendations [cite: 12, 13]
         content_recs = engine.get_content_based(context_query, top_k=20)
-        
-        # B. Collaborative (Based on what users clicked/liked in DB)
-        all_interactions = Interaction.query.all()
         collab_recs = engine.get_collaborative_based(all_interactions, top_k=20)
         
-        # C. Hybrid (Combination)
+        # Pass relationship explicitly to trigger the 'Intent Boost' logic
+        hybrid_recs = engine.get_hybrid_based(
+            context_query, 
+            occasion=occasion, 
+            relationship=relationship, 
+            top_k=20
+        )
+
+    else:
+        # GET REQUEST: Initial page load [cite: 14]
+        # Run engine with default context so Match % isn't N/A
+        content_recs = engine.get_content_based(context_query, top_k=20)
+        collab_recs = engine.get_collaborative_based(all_interactions, top_k=20)
         hybrid_recs = engine.get_hybrid_based(context_query, top_k=20)
 
-    # Fallback if page just loaded (GET request) - Show 20 items
-    if not content_recs:
-        # Simple slicing or random selection if available
-        import random
-        # Helper to get safe slice
-        safe_len = min(len(PRODUCTS), 20)
-        content_recs = PRODUCTS[:safe_len]
-        collab_recs = PRODUCTS[safe_len:safe_len*2] if len(PRODUCTS) > safe_len else PRODUCTS[:safe_len]
-        hybrid_recs = PRODUCTS[:safe_len]
-
+    # 6. Prepare User Data for Template [cite: 14, 15]
     try:
         cart_ids = json.loads(current_user.cart) if current_user.cart else []
     except:

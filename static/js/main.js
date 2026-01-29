@@ -212,14 +212,11 @@ function clearComparison() {
 function openCompareModal() {
     const modal = document.getElementById('compareModal');
     const grid = document.getElementById('compare-grid');
-    grid.innerHTML = ''; // Clear previous content
+    grid.innerHTML = ''; 
 
     if (compareList.length === 0) return;
 
-    // Generate Table Headers
-    let tableHtml = '<table class="compare-table"><thead><tr><th>Feature</th>';
-    
-    // Gather Data from DOM
+    // 1. Gather Rich Data from the DOM
     let products = [];
     compareList.forEach(id => {
         const card = document.getElementById(`card-${id}`);
@@ -228,41 +225,79 @@ function openCompareModal() {
                 title: card.getAttribute('data-title'),
                 price: card.getAttribute('data-price'),
                 vendor: card.getAttribute('data-vendor'),
-                img: card.getAttribute('data-img')
+                img: card.getAttribute('data-img'),
+                confidence: card.getAttribute('data-confidence'),
+                tags: card.getAttribute('data-tags')
             });
         }
     });
 
-    // Headers
-    products.forEach(p => { tableHtml += `<th>${p.title}</th>`; });
-    tableHtml += '</tr></thead><tbody>';
+    // 2. Build the Comparison Matrix HTML
+    let tableHtml = `
+        <div class="compare-header-info">
+            <h3>Comparison Report</h3>
+            <p>Comparing ${products.length} items based on your search query.</p>
+        </div>
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th style="width: 150px;">Feature</th>
+                    ${products.map(p => `<th>${p.title}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Product</strong></td>
+                    ${products.map(p => `
+                        <td>
+                            <img src="${p.img}" class="compare-img">
+                        </td>
+                    `).join('')}
+                </tr>
 
-    // Rows
-    tableHtml += '<tr><td><strong>Image</strong></td>';
-    products.forEach(p => { tableHtml += `<td><img src="${p.img}" width="80" style="border-radius:4px;"></td>`; });
-    tableHtml += '</tr>';
+                <tr class="highlight-row">
+                    <td><strong>Suggestion Rate</strong></td>
+                    ${products.map(p => `
+                        <td>
+                            <div class="match-meter">
+                                <span class="match-value">${p.confidence}${p.confidence !== 'N/A' ? '%' : ''}</span>
+                                <div class="match-label">AI Match Confidence</div>
+                            </div>
+                        </td>
+                    `).join('')}
+                </tr>
 
-    tableHtml += '<tr><td><strong>Price</strong></td>';
-    products.forEach(p => { tableHtml += `<td>₹${p.price}</td>`; });
-    tableHtml += '</tr>';
+                <tr>
+                    <td><strong>Price</strong></td>
+                    ${products.map(p => `<td class="compare-price">₹${p.price}</td>`).join('')}
+                </tr>
 
-    tableHtml += '<tr><td><strong>Vendor</strong></td>';
-    products.forEach(p => { tableHtml += `<td>${p.vendor}</td>`; });
-    tableHtml += '</tr>';
+                <tr>
+                    <td><strong>Key Details</strong></td>
+                    ${products.map(p => `
+                        <td class="compare-details">
+                            ${p.tags ? p.tags.split(',').map(tag => `<span class="detail-tag">${tag.trim()}</span>`).join('') : 'Standard Gift'}
+                        </td>
+                    `).join('')}
+                </tr>
 
-    tableHtml += '</tbody></table>';
+                <tr>
+                    <td><strong>Source</strong></td>
+                    ${products.map(p => `<td><span class="vendor-tag">${p.vendor}</span></td>`).join('')}
+                </tr>
+            </tbody>
+        </table>
 
-    // --- NEW: Action Buttons (Clear & Close) ---
-    tableHtml += `
-        <div style="margin-top: 20px; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
-            <button class="btn-primary" style="background-color: #d32f2f; border:none;" onclick="clearComparison()">Clear All</button>
-            <button class="btn-primary" onclick="closeCompareModal()">Close</button>
+        <div class="compare-footer">
+            <button class="btn-clear" onclick="clearComparison()">Clear All</button>
+            <button class="btn-primary" onclick="closeCompareModal()">Close Window</button>
         </div>
     `;
 
     grid.innerHTML = tableHtml;
     modal.style.display = 'block';
 }
+
 
 function closeCompareModal() {
     const modal = document.getElementById('compareModal');

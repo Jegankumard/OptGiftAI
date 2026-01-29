@@ -1,3 +1,4 @@
+```
 personalized_gifts/ 
 ├── app.py # Main Flask Application & Routes 
 ├── models.py # Database Models (SQLAlchemy) 
@@ -71,3 +72,4 @@ typing_extensions     4.15.0
 tzdata                2025.3
 urllib3               2.6.2
 Werkzeug              3.1.4
+```

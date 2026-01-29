@@ -1,6 +1,11 @@
-<div class="card" id="card-{{ prod.id }}" data-id="{{ prod.id }}" 
-     data-title="{{ prod.title }}" data-price="{{ prod.price }}" data-vendor="{{ prod.vendor }}" 
-     data-img="{{ prod.image_url }}">
+<div class="card" id="card-{{ prod.id }}" 
+     data-id="{{ prod.id }}" 
+     data-title="{{ prod.title }}" 
+     data-price="{{ prod.price }}" 
+     data-vendor="{{ prod.vendor }}" 
+     data-img="{{ prod.image_url }}"
+     data-confidence="{{ prod.confidence if prod.confidence else 'N/A' }}"
+     data-tags="{{ prod.tags | join(', ') if prod.tags else '' }}">
     
     <div class="card-img">
         <img src="{{ prod.image_url }}" 

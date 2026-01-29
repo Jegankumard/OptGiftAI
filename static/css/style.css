@@ -307,3 +307,67 @@ nav {
     color: white;
 }
 
+/* Styling for the new comparison matrix */
+.compare-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 15px;
+}
+
+.highlight-row {
+    background-color: #f0f7ff; /* Light blue highlight for AI results */
+}
+
+.match-meter {
+    text-align: center;
+    padding: 10px;
+}
+
+.match-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #2e7d32; /* Match confidence green */
+}
+
+.match-label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.compare-img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.detail-tag {
+    display: inline-block;
+    background: #f1f1f1;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin: 2px;
+}
+
+.compare-footer {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 2px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-clear {
+    background: #fff;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
