@@ -40,12 +40,8 @@ function likeProduct(productId) {
 // --- Dislike & Replace Logic ---
 function dislikeProduct(productId) {
     const card = document.getElementById(`card-${productId}`);
-    
-    // 1. Collect currently visible IDs to avoid duplicates in replacement
     const visibleCards = document.querySelectorAll('.card');
     let excludeIds = Array.from(visibleCards).map(c => parseInt(c.getAttribute('data-id')));
-    
-    // 2. Visual removal
     if(card) card.style.opacity = '0';
     showToast("Product removed. Fetching new recommendation...", "info");
     
@@ -152,7 +148,6 @@ function toggleCompare(productId, btnElement) {
     const signSpan = btnElement.querySelector('.sign');
     
     if (index === -1) {
-        // Add
         if (compareList.length >= 3) {
             showToast("You can only compare up to 3 products.", "error");
             return;
@@ -162,7 +157,6 @@ function toggleCompare(productId, btnElement) {
         signSpan.textContent = '-';
         showToast("Added to compare.", "success");
     } else {
-        // Remove
         compareList.splice(index, 1);
         btnElement.classList.remove('active');
         signSpan.textContent = '+';
@@ -186,7 +180,7 @@ function updateCompareFloat() {
     }
 }
 
-// --- NEW: Clear Comparison Logic ---
+// --- Comparison Logic ---
 function clearComparison() {
     // 1. Reset the UI buttons for items currently in the list
     compareList.forEach(id => {
@@ -215,8 +209,6 @@ function openCompareModal() {
     grid.innerHTML = ''; 
 
     if (compareList.length === 0) return;
-
-    // 1. Gather Rich Data from the DOM
     let products = [];
     compareList.forEach(id => {
         const card = document.getElementById(`card-${id}`);
@@ -232,7 +224,7 @@ function openCompareModal() {
         }
     });
 
-    // 2. Build the Comparison Matrix HTML
+    // 2. Build Comparison Matrix HTML
     let tableHtml = `
         <div class="compare-header-info">
             <h3>Comparison Report</h3>
@@ -306,15 +298,12 @@ function closeCompareModal() {
 
 // --- Event Listeners ---
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Close modal if clicked outside
     window.onclick = function(event) {
         const modal = document.getElementById('compareModal');
         if (event.target == modal) {
             modal.style.display = "none";
         }
     }
-
-    // 2. Fix Close Button (The 'X' at top right)
     const closeBtn = document.querySelector('.close');
     if (closeBtn) {
         closeBtn.onclick = function() {

@@ -15,14 +15,40 @@
     </div>
     
     <div class="card-body">
-        <h4 style="font-size: 1rem; margin: 10px 0;">{{ prod.title }}</h4>
+        <h4 style="font-size: 1rem; margin: 10px 0 5px 0;">{{ prod.title }}</h4>
+    
+        <div class="rating-row" style="color: #f39c12; font-size: 0.85rem; margin-bottom: 8px;">
+            <span class="stars">
+                {% set rating_val = prod.rating | float %}
+                {% for i in range(5) %}
+                    {% if rating_val > i %}
+                        <i class="fas fa-star"></i>
+                    {% else %}
+                        <i class="far fa-star"></i>
+                    {% endif %}
+                {% endfor %}
+            </span>
+            <span style="color: #666; margin-left: 4px;">({{ rating_val }})</span>
+        </div>
+    
+        <div class="tags-row" style="margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 4px;">
+            {% for tag in prod.tags[:3] %}
+                <span style="background: #f1f2f6; color: #57606f; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; border: 1px solid #dfe4ea;">
+                    {{ tag }}
+                </span>
+            {% endfor %}
+        </div>
+    
         {% if prod.confidence %}
         <div style="margin-bottom: 8px; font-size: 0.8rem; background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; display: inline-block;">
             <strong>{{ prod.confidence }}% Match</strong>
             <div style="font-size: 0.7rem; color: #555;">via {{ prod.model_used }}</div>
         </div>
         {% endif %}
-        <p class="price">₹{{ prod.price }} <span class="vendor">via {{ prod.vendor }}</span></p>
+    
+        <p class="price" style="font-weight: bold; margin-bottom: 12px;">
+            ₹{{ prod.price }} <span class="vendor" style="font-weight: normal; font-size: 0.8rem; color: #888;">via {{ prod.vendor }}</span>
+        </p>
         
         <div class="actions-row">
             <div class="action-group">
@@ -34,7 +60,7 @@
                 <button onclick="toggleCompare('{{ prod.id }}', this)" class="btn-secondary btn-sm compare-btn" title="Compare">
                     Comp <span class="sign">+</span>
                 </button>
-
+    
                 {% if prod.id in cart_ids %}
                 <button onclick="toggleCart('{{ prod.id }}', this)" class="btn-primary btn-sm cart-btn remove-mode" title="Remove from Cart">
                     Cart <span class="sign">-</span>

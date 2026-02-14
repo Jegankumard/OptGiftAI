@@ -12,6 +12,16 @@ import json
 from datetime import datetime
 import time
 
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer, PorterStemmer
+
+# Download necessary NLTK data
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///optgift.db'
@@ -21,6 +31,22 @@ engine = GiftRecommender(PRODUCTS)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+def preprocess_query(text):
+    if not text:
+        return ""
+    
+    # Tokenize and Lowercase
+    tokens = word_tokenize(text.lower())
+    
+    # Remove Stopwords and non-alphabetic characters
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [w for w in tokens if w.isalpha() and w not in stop_words]
+    
+    # Lemmatization (Converts 'books' to 'book')
+    lemmatizer = WordNetLemmatizer()
+    lemmatized = [lemmatizer.lemmatize(w) for w in filtered_tokens]
+    return " ".join(lemmatized)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -37,7 +63,7 @@ with app.app_context():
         # Shared password for all test accounts
         password_hash = generate_password_hash("jegan")
         
-        # Data pools for randomization [cite: 569-574, 578]
+        # Data pools for randomization 
         first_names = ["Amit", "Priya", "Rahul", "Anjali", "Vikram", "Neha", "Sanjay", "Deepa", "Arjun", "Kavita"]
         last_names = ["Sharma", "Verma", "Gupta", "Malhotra", "Joshi", "Patel", "Reddy", "Nair"]
         interest_options = ["tech", "fashion", "home", "food", "travel"]
@@ -63,7 +89,7 @@ with app.app_context():
                 "occasion": random.choice(occasions)
             }
 
-            # 4. Create and stage user [cite: 31]
+            # 4. Create and stage user 
             new_user = User(
                 name=name,
                 phone=phone,
@@ -160,11 +186,11 @@ def dashboard():
     collab_recs = []
     hybrid_recs = []
 
-    # Get all interactions once for the engines [cite: 11]
+    # Get all interactions once for the engines
     all_interactions = Interaction.query.all()
     
     if request.method == 'POST':
-        # 2. Capture Inputs from the form [cite: 7, 9]
+        # 2. Capture Inputs from the form 
         current_mode = request.form.get('search_mode', 'advanced')
         use_personalization = request.form.get('use_personalization')
         
@@ -178,15 +204,18 @@ def dashboard():
 
         if current_mode == 'normal':
             normal_query = request.form.get('normal_query', '')
-            context_query = f"{normal_query} {normal_query} {normal_query} {personal_tags}".strip()
+            # Preprocess the user's raw input
+            clean_normal = preprocess_query(normal_query)
+            context_query = f"{clean_normal} {clean_normal} {clean_normal} {personal_tags}".strip()            
+            
         else:
-            # Explicitly capture advanced fields [cite: 9]
+            # Explicitly capture advanced fields 
             occasion = request.form.get('occasion', '')
             relationship = request.form.get('relationship', '')
             likes = request.form.get('likes', '')
             comments = request.form.get('comments', '')
             
-            # 3. Build Weighted Query String [cite: 10]
+            # 3. Build Weighted Query String 
             # Repeating 'occasion' to increase its TF-IDF importance
             parts = []
             if occasion: parts.append(f"{occasion} {occasion}")
@@ -197,38 +226,37 @@ def dashboard():
             
             context_query = " ".join(parts) if parts else "personalized gift"
 
-        # 4. Update Recommendation Engine with latest DB data [cite: 11, 280]
+        # 4. Update Recommendation Engine with latest DB data 
         engine.update_model_with_interactions(all_interactions)
         
-        # 5. Generate Recommendations [cite: 12, 13]
-        content_recs = engine.get_content_based(context_query, top_k=20)
-        collab_recs = engine.get_collaborative_based(all_interactions, top_k=20)
+        # 5. Generate Recommendations
+        content_recs = engine.get_content_based(context_query, top_k=10)
+        collab_recs = engine.get_collaborative_based(all_interactions, top_k=10)
         
         # Pass relationship explicitly to trigger the 'Intent Boost' logic
         hybrid_recs = engine.get_hybrid_based(
             context_query, 
             occasion=occasion, 
             relationship=relationship, 
-            top_k=20
+            top_k=10
         )
 
     else:
-        # GET REQUEST: Initial page load [cite: 14]
-        # Run engine with default context so Match % isn't N/A
-        content_recs = engine.get_content_based(context_query, top_k=20)
-        collab_recs = engine.get_collaborative_based(all_interactions, top_k=20)
-        hybrid_recs = engine.get_hybrid_based(context_query, top_k=20)
+        # GET REQUEST: Initial page load 
+        content_recs = engine.get_content_based(context_query, top_k=10)
+        collab_recs = engine.get_collaborative_based(all_interactions, top_k=10)
+        hybrid_recs = engine.get_hybrid_based(context_query, top_k=10)
 
-    # 6. Prepare User Data for Template [cite: 14, 15]
+    # 6. Prepare User Data for Template 
     try:
         cart_ids = json.loads(current_user.cart) if current_user.cart else []
     except:
         cart_ids = []
 
     return render_template('dashboard.html', 
-                         content_recs=content_recs, 
+                         content_recs=hybrid_recs, 
                          collab_recs=collab_recs,
-                         hybrid_recs=hybrid_recs,
+                         hybrid_recs=content_recs,
                          current_mode=current_mode,
                          normal_query=normal_query,
                          occasion=occasion,
@@ -237,6 +265,7 @@ def dashboard():
                          comments=comments,
                          cart_ids=cart_ids)
     
+
 # --- Context Processor Route ---
 @app.context_processor
 def inject_cart_count():
@@ -254,8 +283,7 @@ def inject_cart_count():
 def add_to_cart():
     data = request.json
     # FIX: Cast to int to match MOCK_PRODUCTS ID type
-    product_id = int(data.get('product_id')) 
-    
+    product_id = int(data.get('product_id'))
     try:
         cart_list = json.loads(current_user.cart) if current_user.cart else []
     except:

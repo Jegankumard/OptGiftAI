@@ -27,7 +27,7 @@ class User(UserMixin, db.Model):
 class Interaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    product_id = db.Column(db.String(50)) # Stores the large CSV ID
+    product_id = db.Column(db.String(50)) 
     action_type = db.Column(db.String(20)) 
     rating = db.Column(db.Integer, nullable=True) 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
@@ -41,33 +41,26 @@ def load_products_from_csv():
         return []
 
     try:
-        # Load CSV
-        df = pd.read_csv(csv_file)
-        
-        # Data Cleaning & Type Conversion
+        df = pd.read_csv('optgiftai_database.csv')
         products = []
         for _, row in df.iterrows():
             products.append({
                 "id": int(row['id']) if pd.notna(row['id']) else 0,
                 "title": row['title'] if pd.notna(row['title']) else "Unknown Product",
-                "category": row['category'] if pd.notna(row['category']) else "General",
-                "description": row['description'] if pd.notna(row['description']) else "",
+                "rating": float(row['rating']) if pd.notna(row['rating']) else 0.0,  # Ensure this is added
+                "tags": str(row['tags']).split(', ') if pd.notna(row['tags']) else [],
                 "price": float(row['price']) if pd.notna(row['price']) else 0.0,
+                "description": row['description'] if pd.notna(row['description']) else "",
                 "image_url": row['image_url'] if pd.notna(row['image_url']) else "",
-                
-                # Fields expected by your Templates/App but missing in CSV
-                "vendor": "Meevyy", 
-                "pros": ["Good quality", "Value for money"], 
-                "cons": [],
-                "tags": str(row['tags']).split(', ') if pd.notna(row['tags']) else []
+                "vendor": row['vendor'] if pd.notna(row['vendor']) else "Unknown",
+                "link": row['link'] if pd.notna(row['link']) else "#"
             })
-            
-        print(f"Successfully loaded {len(products)} products from CSV.")
         return products
 
     except Exception as e:
+        # The SyntaxError was likely due to a missing '}' or ')' above this line
         print(f"Error loading product database: {e}")
         return []
 
-# Export the loaded products
+# Export the loaded products for app.py and recommender.py
 PRODUCTS = load_products_from_csv()
